@@ -1,6 +1,7 @@
 {
   "nodeModulesDir": "auto",
   "imports": {
+    "@std/expect": "jsr:@std/expect@^1.0.17",
     "effect": "npm:effect@^3.18.4",
     "xstate": "npm:xstate@^5.23.0"
   }
