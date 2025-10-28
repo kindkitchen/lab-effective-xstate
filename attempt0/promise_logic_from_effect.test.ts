@@ -1,7 +1,7 @@
+import { expect } from "@std/expect";
 import { Context, Effect, Either, Layer } from "effect";
 import { assign, createActor, setup, toPromise } from "xstate";
 import { promise_logic_from_effect } from "./promise_logic_from_effect.ts";
-import { expect } from "@std/expect";
 
 class A extends Context.Tag("A")<A, { make_a: () => "a" | "A" }>() {}
 class B extends Context.Tag("B")<B, { make_b: () => "b" | "B" }>() {}
@@ -36,6 +36,32 @@ const demo = (message: string) =>
     };
   });
 
+const x = {
+  INIT: {
+    name: "Init",
+    ref: "#Init",
+  },
+  OK: {
+    name: "Ok",
+    ref: "#Ok",
+  },
+  DONE: {
+    name: "Done",
+    ref: "#Done",
+  },
+  NOK: {
+    name: "Nok",
+    ref: "#Nok",
+  },
+  EXCEPTION: {
+    name: "Exception",
+    ref: "#Exception",
+  },
+  ERROR: {
+    name: "Error",
+    ref: "#Error",
+  },
+};
 const machine = setup({
   actors: {
     demo: promise_logic_from_effect(demo),
@@ -74,9 +100,10 @@ const machine = setup({
 
     return { message: "wtf?" };
   },
-  initial: "Init",
+  initial: x.INIT.name,
   states: {
-    Init: {
+    [x.INIT.name]: {
+      id: x.INIT.name,
       invoke: {
         src: "demo",
         input: ({ context }) => ({
@@ -92,50 +119,51 @@ const machine = setup({
               type: "is_demo_failed",
               params: ({ event }) => event.output,
             },
-            target: "#ShowException",
+            target: x.EXCEPTION.ref,
           },
           {
-            target: "#ShowSuccess",
+            target: x.OK.ref,
           },
         ],
         onError: {
-          target: "#ShowError",
+          target: x.ERROR.ref,
         },
       },
     },
-    Ok: {
+    [x.OK.name]: {
+      id: x.OK.name,
       always: {
-        target: "Done",
+        target: x.DONE.ref,
         actions: {
           type: "assign_output",
           params: "ok!",
         },
       },
-      id: "ShowSuccess",
     },
-    Done: {
-      id: "done",
+    [x.DONE.name]: {
+      id: x.DONE.name,
       type: "final",
     },
-    Nok: {
-      onDone: { target: "Done" },
-      initial: "Error",
+    [x.NOK.name]: {
+      id: x.NOK.name,
+      onDone: { target: x.DONE.ref },
+      initial: x.ERROR.name,
       states: {
-        Exception: {
-          always: { target: "#done" },
+        [x.EXCEPTION.name]: {
+          id: x.EXCEPTION.name,
+          always: { target: x.DONE.ref },
           entry: {
             type: "assign_output",
             params: "oops!",
           },
-          id: "ShowException",
         },
-        Error: {
-          always: { target: "#done" },
+        [x.ERROR.name]: {
+          id: x.ERROR.name,
+          always: { target: x.DONE.ref },
           entry: {
             type: "assign_output",
             params: "how?",
           },
-          id: "ShowError",
         },
       },
     },
@@ -178,7 +206,7 @@ Deno.test("promise_logic_from_effect", async (t) => {
         input: {
           deps: [
             Layer.succeed(A, {
-              make_a: () => "c" as any,
+              make_a: () => "c" as unknown as "a", /// test purpose,
             }),
             Layer.succeed(B, {
               make_b: () => "b",

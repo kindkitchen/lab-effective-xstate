@@ -1,4 +1,7 @@
 {
+  "tasks": {
+    "test": "deno test --doc --ignore=.github/"
+  },
   "nodeModulesDir": "auto",
   "imports": {
     "@std/expect": "jsr:@std/expect@^1.0.17",
