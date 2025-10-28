@@ -25,3 +25,6 @@ _______________:
 [script('bash')]
 fmt:
     just --format
+
+a0 *args:
+    just app attempt0 {{ args }}

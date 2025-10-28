@@ -1,0 +1,7 @@
+{
+  "nodeModulesDir": "auto",
+  "imports": {
+    "effect": "npm:effect@^3.18.4",
+    "xstate": "npm:xstate@^5.23.0"
+  }
+}
