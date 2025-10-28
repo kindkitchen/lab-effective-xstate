@@ -1,6 +1,18 @@
 import { Effect, Either, Layer } from "effect";
 import { fromPromise } from "xstate";
 
+/**
+ * #### Transform effect into promise logic.
+ *
+ * @description
+ * - Both <Success> and <Error> channels from <Effect> is piped to <onDone> but wrapped into <Either>.
+ * - So into <onError> will be passed <Panic>
+ * - As parameters expected <Input> and explicit layer with all <Requirement>s
+ * ---
+ * read more:
+ * - [Full documentation in markdown file](./promise_logic_from_effect.md)
+ * - [Explore simple test fro this utility](./promise_logic_from_effect.test.ts)
+ */
 export function promise_logic_from_effect<
   T extends (...arg: any[]) => Effect.Effect<any, any, any>,
 >(fn: T) {
@@ -33,3 +45,5 @@ export function promise_logic_from_effect<
     },
   );
 }
+
+promise_logic_from_effect;
