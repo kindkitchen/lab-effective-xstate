@@ -5,5 +5,8 @@
     "effect": "npm:effect@^3.18.4",
     "xstate": "npm:xstate@^5.23.0"
   },
-  "unstable": ["raw-imports"]
+  "unstable": ["raw-imports"],
+  "fmt": {
+    "quoteProps": "consistent"
+  }
 }
