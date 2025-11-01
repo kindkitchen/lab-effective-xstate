@@ -17,17 +17,21 @@ const x = {
   },
 };
 
-type Input = {};
+type Ctx = {
+  Actor: {
+    demo: (num: number) => Effect.Effect<"Int: odd" | "Int: even", "Float">;
+  };
+  num: number;
+};
+type Input = {
+  Actor: Ctx["Actor"];
+  num: number;
+};
 
 const machine = setup({
   types: {
     input: {} as Input,
-    context: {} as {
-      Input: Input;
-      Actor: {
-        demo: (num: number) => Effect.Effect<{ ok: boolean }, "Oops">;
-      };
-    },
+    context: {} as Ctx,
   },
   actors: {
     demo2: promise_logic_from_effect_v3("demo" as const),
@@ -39,16 +43,16 @@ const machine = setup({
       id: x.INIT.name,
       invoke: {
         src: "demo2",
-        input: ({ context }) => [context, 34] as const,
+        input: ({ context }) => [context, context.num] as const,
         onDone: {
-          actions: ({ event }) => console.log(event.output._tag),
+          actions: ({ event }) => console.log(event.output),
         },
         onError: {
           actions: ({ event }) => console.error("catched:", event.error),
         },
       },
       after: {
-        500: x.DONE.ref,
+        200: x.DONE.ref,
       },
     },
     [x.DONE.name]: {
@@ -58,107 +62,38 @@ const machine = setup({
   },
   context: ({ input }) => {
     return {
-      Input: input,
-      Actor: {
-        demo: (num) => origin,
-      },
+      Actor: input.Actor,
+      num: input.num,
     };
   },
 });
 
-const origin = Effect.gen(function* () {
-  if (Math.random() > 0.5) {
-    yield* Effect.fail("Oops" as const);
-  } else if (Math.random() > 0.6) {
-    throw new Error("PANIC");
-  }
+for (let i = 0; i < 20; i += 0.5) {
+  console.log("i", i);
+  const actor = createActor(machine, {
+    input: {
+      num: i,
+      Actor: {
+        demo: (num) =>
+          Effect.gen(function* () {
+            console.log("num", num);
+            if (Date.now() % 3) {
+              throw new Error("BOOM!!!");
+            }
 
-  return {
-    ok: true,
-  };
-});
+            if (!Number.isInteger(num)) {
+              yield* Effect.fail("Float" as const);
+            }
 
-await toPromise(
-  createActor(machine, {
-    input: {},
-  }).start(),
-);
+            if (num % 2 === 0) {
+              return "Int: even" as const;
+            } else {
+              return "Int: even" as const;
+            }
+          }),
+      },
+    },
+  });
 
-await toPromise(
-  createActor(machine, {
-    input: {},
-  }).start(),
-);
-await toPromise(
-  createActor(machine, {
-    input: {},
-  }).start(),
-);
-await toPromise(
-  createActor(machine, {
-    input: {},
-  }).start(),
-);
-await toPromise(
-  createActor(machine, {
-    input: {},
-  }).start(),
-);
-
-await toPromise(
-  createActor(machine, {
-    input: {},
-  }).start(),
-);
-await toPromise(
-  createActor(machine, {
-    input: {},
-  }).start(),
-);
-await toPromise(
-  createActor(machine, {
-    input: {},
-  }).start(),
-);
-await toPromise(
-  createActor(machine, {
-    input: {},
-  }).start(),
-);
-
-await toPromise(
-  createActor(machine, {
-    input: {},
-  }).start(),
-);
-await toPromise(
-  createActor(machine, {
-    input: {},
-  }).start(),
-);
-await toPromise(
-  createActor(machine, {
-    input: {},
-  }).start(),
-);
-await toPromise(
-  createActor(machine, {
-    input: {},
-  }).start(),
-);
-
-await toPromise(
-  createActor(machine, {
-    input: {},
-  }).start(),
-);
-await toPromise(
-  createActor(machine, {
-    input: {},
-  }).start(),
-);
-await toPromise(
-  createActor(machine, {
-    input: {},
-  }).start(),
-);
+  await toPromise(actor.start());
+}
